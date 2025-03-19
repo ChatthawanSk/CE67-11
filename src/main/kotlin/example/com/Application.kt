@@ -40,12 +40,14 @@ fun Application.module() {
 
     install(CORS) {
         anyHost() // Allows all origins
+        allowCredentials = true // Allow credentials (cookies, authorization headers, etc.)
         allowHeader(HttpHeaders.ContentType)
         allowHeader(HttpHeaders.Authorization)
         allowMethod(HttpMethod.Get)
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Put)
         allowMethod(HttpMethod.Delete)
+        allowMethod(HttpMethod.Options)  // Allow preflight (OPTIONS) method
     }
 
         initDatabase()
