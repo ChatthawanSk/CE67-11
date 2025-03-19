@@ -38,11 +38,15 @@ fun Application.module() {
     val gitHubRepository = GitHubRepository()
     val githubService = GitHubService(gitHubRepository)
 
-        install(CORS){
-            anyHost() // Allows all origins
-            allowCredentials = true // Allow cookies to be included in requests
-            allowNonSimpleContentTypes = true // Allow non-simple content types
-}
+    install(CORS) {
+        anyHost() // Allows all origins
+        allowHeader(HttpHeaders.ContentType)
+        allowHeader(HttpHeaders.Authorization)
+        allowMethod(HttpMethod.Get)
+        allowMethod(HttpMethod.Post)
+        allowMethod(HttpMethod.Put)
+        allowMethod(HttpMethod.Delete)
+    }
 
         initDatabase()
         install(ContentNegotiation) {

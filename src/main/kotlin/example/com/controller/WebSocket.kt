@@ -458,20 +458,18 @@ object WebSocketHandler {
             columns.forEachIndexed { index, value ->
                 val numValue = value.toIntOrNull() ?: return@forEachIndexed // Skip invalid numbers
 
-                // Calculate the column index (2, 6, 10, etc.)
+                // Calculate the column index (2, 6, 10, etc. for the first group, 6, 10, 14, etc. for the second group)
                 val columnIndex = (index + 1) % 4
 
-                if (columnIndex == 2 || columnIndex == 4) {
-                    // For column 2 (2, 6, 10...), add to column 2 list
-                    result.computeIfAbsent(2) { mutableListOf() }.add(numValue)
-                } else if (columnIndex == 0) {
-                    // For column 6, 10, 14... add to column 6 list
-                    result.computeIfAbsent(6) { mutableListOf() }.add(numValue)
+                if (columnIndex == 2 || columnIndex == 0) {
+                    // For columns 2, 6, 10... (index 1, 5, 9, ...) and column 6 (index 3, 7, 11, ...)
+                    result.computeIfAbsent(index / 4 + 1) { mutableListOf() }.add(numValue)
                 }
             }
         }
         return result
     }
+
 
     private fun extractColumns(data: String, interval: Int): List<List<Int>> {
         val extractedColumns = mutableListOf<MutableList<Int>>()
@@ -479,7 +477,7 @@ object WebSocketHandler {
         data.lines().forEach { line ->
             val columns = line.split(",")
             columns.forEachIndexed { index, value ->
-                if ((index % interval) == 0) {  // Extract every `interval`th column
+                if ((index + 1) % interval == 0) {  // Adjust to get every `interval`-th column (3rd, 6th, 9th, etc.)
                     while (extractedColumns.size <= (index / interval)) {
                         extractedColumns.add(mutableListOf()) // Ensure list size
                     }
@@ -487,8 +485,10 @@ object WebSocketHandler {
                 }
             }
         }
+        println(extractedColumns)
         return extractedColumns
     }
+
     private fun crossCorrelation(signalType: String, outputSignal: List<Int>, expectedSignal: List<Int>): Pair<Int, Double> {
         return when (signalType) {
             "PWM" -> crossCorrelationPWM(outputSignal, expectedSignal)
