@@ -21,7 +21,7 @@ import example.com.service.GitHubService
 import example.com.service.UserService
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
-import io.ktor.server.plugins.cors.routing.CORS
+import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.websocket.*
 import java.time.Duration
 
@@ -31,23 +31,22 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    val userRepository = UserRepository()
-    val userService = UserService(userRepository)
-    val classroomRepository = ClassroomRepository()
-    val classroomService = ClassroomService(classroomRepository)
-    val gitHubRepository = GitHubRepository()
-    val githubService = GitHubService(gitHubRepository)
-
     install(CORS) {
-        anyHost() // Allows all origins
-        allowCredentials = true // Allow credentials (cookies, authorization headers, etc.)
+        anyHost()  // Specific frontend domain
         allowHeader(HttpHeaders.ContentType)
         allowHeader(HttpHeaders.Authorization)
+        allowHeader("ngrok-skip-browser-warning")  // Add any custom headers you're sending
         allowMethod(HttpMethod.Get)
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Put)
         allowMethod(HttpMethod.Delete)
-        allowMethod(HttpMethod.Options)  // Allow preflight (OPTIONS) method
+        allowMethod(HttpMethod.Options)
+    }
+
+    intercept(ApplicationCallPipeline.Call) {
+        val origin = call.request.headers[HttpHeaders.Origin]
+        val requestHeaders = call.request.headers.entries().joinToString(", ")
+        println("CORS request from origin: $origin, headers: $requestHeaders")
     }
 
         initDatabase()
@@ -83,7 +82,14 @@ fun Application.module() {
             maxFrameSize = Long.MAX_VALUE
             masking = false
         }
-        routing {
+    val userRepository = UserRepository()
+    val userService = UserService(userRepository)
+    val classroomRepository = ClassroomRepository()
+    val classroomService = ClassroomService(classroomRepository)
+    val gitHubRepository = GitHubRepository()
+    val githubService = GitHubService(gitHubRepository)
+
+    routing {
             get("/") {
                 call.respondText("Server is Up and Running Just fine")
             }
